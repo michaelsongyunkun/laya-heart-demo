@@ -1,0 +1,751 @@
+/* Laya-Heart, local web page.
+   An evening palette: plum night (dawn lavender in light mode), an ember rose for you and the words
+   you send, a violet for Laya. One signature: Laya's read hangs off each of the partner's messages
+   on a thin thread; older reads fold into one-line tags, so the chat shows how the mood went.
+   Everything else stays quiet: one top bar, two panels, no repeated hints. */
+
+:root {
+  --bg: #f7f3fa;
+  --surface: rgb(255 255 255 / 0.86);
+  --card: #ffffff;
+  --sunk: #f2ecf6;
+  --line: #e6ddef;
+  --line-2: #d6cae3;
+  --ink: #221a2e;
+  --ink-2: #5b4f69;
+  --ink-3: #716680;
+  --rose: #d42f64;
+  --violet: #6b58e6;
+  --on-violet: #ffffff;
+  --amber: #a86400;    /* amber as text: dark enough to read */
+  --amber-hi: #f2a12a; /* amber as light: dots, tints, the middle of the danger scale */
+  --ember: #ff9a2e;
+  --mint: #0a8460;
+  --mint-hi: #2bb88a;
+  --danger: #d4344f;
+  /* your voice: your bubbles, the recommended reply, the button that copies what you send
+     (white text stays at 4.5:1 or more along the whole gradient) */
+  --voice: linear-gradient(120deg, #d6336a 0%, #bb3f97 55%, #7453de 100%);
+  --laya-bg: color-mix(in oklab, var(--violet) 6%, var(--card));
+  --laya-line: color-mix(in oklab, var(--violet) 22%, var(--line));
+  --shadow-sm: 0 1px 2px rgb(52 28 80 / 0.06);
+  --shadow: 0 1px 2px rgb(52 28 80 / 0.05), 0 14px 34px -12px rgb(52 28 80 / 0.18);
+  --shadow-lg: 0 30px 70px -20px rgb(52 28 80 / 0.38);
+  --sky: 0.26;
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-serif: "Sitka Display", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-mono: "Cascadia Mono", Consolas, ui-monospace, "SF Mono", monospace;
+  --r-xl: 24px;
+  --r-lg: 18px;
+  --r: 14px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #120d19;
+    --surface: rgb(29 22 41 / 0.86);
+    --card: #1c1526;
+    --sunk: #251c32;
+    --line: #32283f;
+    --line-2: #45395b;
+    --ink: #f3edf8;
+    --ink-2: #bdb1cd;
+    --ink-3: #8b809e;
+    --rose: #ff5c8f;
+    --violet: #a898ff;
+    --on-violet: #160f22;
+    --amber: #ffb547;
+    --amber-hi: #ffb547;
+    --ember: #ffa94d;
+    --mint: #5fdfb5;
+    --mint-hi: #5fdfb5;
+    --danger: #ff6b7f;
+    --voice: linear-gradient(120deg, #cf3a6e 0%, #b048a7 55%, #6d54e4 100%);
+    --laya-bg: color-mix(in oklab, var(--violet) 9%, var(--card));
+    --laya-line: color-mix(in oklab, var(--violet) 26%, var(--line));
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -14px rgb(0 0 0 / 0.6);
+    --shadow-lg: 0 30px 80px -20px rgb(0 0 0 / 0.75);
+    --sky: 0.42;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.55 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+a { color: var(--violet); }
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; border-radius: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.dim { color: var(--ink-3); }
+.mono { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.fine { color: var(--ink-3); font-size: 12px; margin: 0; }
+.fine.is-warn { color: var(--amber); }
+.ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+kbd {
+  font-family: var(--font-mono); font-size: 11px; line-height: 1;
+  padding: 2px 6px 3px; border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: 6px;
+  background: var(--card); color: var(--ink-2);
+}
+.fatal { padding: 40px; font-size: 15px; }
+
+/* ---------- shell: a top bar, then the chat and the replies side by side, filling the window ---------- */
+.app {
+  position: relative;
+  isolation: isolate;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 1380px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+/* The evening sky behind the top of the page. */
+.app::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  inset: -20vh -12vw auto -12vw;
+  height: 66vh;
+  background:
+    radial-gradient(34% 50% at 16% 40%, var(--rose), transparent 72%),
+    radial-gradient(32% 48% at 50% 22%, var(--violet), transparent 72%),
+    radial-gradient(30% 46% at 86% 44%, var(--ember), transparent 72%),
+    radial-gradient(24% 38% at 32% 76%, #19b3a3, transparent 72%);
+  opacity: var(--sky);
+  filter: blur(64px);
+  /* A slow drift in 2 steps a second, not 60 frames: the blur is redrawn only when it moves, and
+     the models share this CPU (smooth drift cost a headless Edge ~30% of a core at idle). */
+  animation: sky 34s steps(68) infinite alternate;
+  pointer-events: none;
+}
+.app.has-sheet::before { animation-play-state: paused; }
+@keyframes sky {
+  from { transform: translate3d(-3%, 0, 0) scale(1); }
+  to { transform: translate3d(4%, 3vh, 0) scale(1.08); }
+}
+
+.hdr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; min-width: 0; padding: 14px 28px 12px; }
+.brand { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+/* An ember: it flickers while Laya and Gemma are working. */
+.brand-mark {
+  width: 16px; height: 16px; border-radius: 50%; flex: none;
+  background: radial-gradient(circle at 50% 56%, #fff 0 15%, #ffd58f 30%, var(--ember) 48%, var(--rose) 72%, transparent 74%);
+  box-shadow: 0 0 12px 3px color-mix(in oklab, var(--ember) 45%, transparent);
+}
+.app.is-busy .brand-mark { animation: flicker 1.3s infinite; }
+@keyframes flicker {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  25% { opacity: 0.8; filter: brightness(1.3); }
+  55% { opacity: 1; filter: brightness(0.95); }
+  80% { opacity: 0.88; filter: brightness(1.22); }
+}
+.brand-name { font: 650 20px/1 var(--font-display); letter-spacing: -0.02em; }
+.brand-name em { font: italic 500 23px/1 var(--font-serif); letter-spacing: -0.005em; color: var(--rose); margin-left: 3px; }
+.tag { font-size: 11.5px; color: var(--ink-3); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+.tag.is-demo { color: var(--amber); border-color: color-mix(in oklab, var(--amber-hi) 45%, transparent); background: color-mix(in oklab, var(--amber-hi) 8%, transparent); }
+
+/* Where the text goes, and whether the two models are up: one capsule. */
+.status {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 5px 13px 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  font-size: 12.5px; color: var(--ink-2);
+  white-space: nowrap;
+}
+.privacy { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.privacy .ico { width: 15px; height: 15px; }
+.privacy.is-local { color: var(--mint); }
+.privacy.is-remote { color: var(--amber); }
+.status .sep { width: 1px; height: 14px; background: var(--line-2); }
+.engines { display: inline-flex; gap: 10px; }
+.eng { display: inline-flex; align-items: center; gap: 6px; }
+.eng i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); flex: none; }
+.eng.is-ready i { background: var(--mint); box-shadow: 0 0 0 3px color-mix(in oklab, var(--mint) 18%, transparent); }
+.eng.is-loading i { background: var(--amber-hi); animation: pulse 1.2s infinite; box-shadow: 0 0 0 0 color-mix(in oklab, var(--amber-hi) 60%, transparent); }
+.eng.is-error i, .eng.is-missing i { background: var(--danger); }
+.icon-btn {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 11px;
+  border: 0; background: transparent; color: var(--ink-2);
+}
+.icon-btn:hover { background: var(--sunk); color: var(--ink); }
+
+.hdr { grid-row: 1; }
+.banners { grid-row: 2; display: grid; gap: 8px; padding: 0 24px 12px; }
+.banners:empty { padding: 0; }
+.banner {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  padding: 9px 14px; border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink-2); font-size: 13px;
+}
+.banner.is-warn { background: color-mix(in oklab, var(--amber-hi) 11%, var(--card)); border-color: color-mix(in oklab, var(--amber-hi) 35%, var(--line)); color: var(--ink); }
+
+/* First start: the models to download, one row each, with a thin progress line. */
+.setup {
+  display: grid; gap: 10px; max-width: 760px;
+  padding: 16px 18px; border-radius: var(--r-lg);
+  border: 1px solid var(--laya-line);
+  background: var(--card); box-shadow: var(--shadow);
+}
+.setup h3 { margin: 0; font: 650 16px/1.35 var(--font-display); }
+.setup p { margin: 0; overflow-wrap: anywhere; }
+.setup-list { list-style: none; margin: 2px 0; padding: 0; display: grid; gap: 11px; }
+.setup-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; align-items: baseline; }
+.setup-name { font-weight: 600; }
+.setup-row .dim { font-size: 12px; font-variant-numeric: tabular-nums; }
+.setup-state { grid-column: 1 / -1; color: var(--ink-2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.setup-row.is-ready .setup-state { color: var(--mint); }
+.setup-row.is-error .setup-state { color: var(--danger); }
+.setup-row.is-unsupported .setup-state { color: var(--ink-3); }
+.setup-meter { grid-column: 1 / -1; height: 5px; border-radius: 5px; background: var(--sunk); overflow: hidden; }
+.setup-meter i { display: block; height: 100%; width: calc(var(--p) * 100%); border-radius: 5px; background: var(--voice); transition: width 0.6s ease-out; }
+
+.main {
+  grid-row: 3;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+  gap: 18px;
+  padding: 2px 24px 22px;
+}
+.convo, .replies {
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  background: var(--surface); /* no backdrop blur: the sky behind is soft already, and blur under it costs CPU */
+  box-shadow: var(--shadow);
+}
+
+/* ---------- buttons ---------- */
+.ghost {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink-2);
+  border-radius: 10px;
+  padding: 5px 11px;
+  font-size: 12.5px;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+}
+.ghost .ico { width: 15px; height: 15px; }
+.ghost:hover:not(:disabled) { color: var(--ink); border-color: var(--line-2); }
+.ghost:disabled { opacity: 0.45; }
+.ghost.is-danger { color: var(--danger); }
+.ghost.is-danger:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); }
+.link { border: 0; background: none; padding: 0; color: var(--violet); font-size: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px 18px;
+  border: 0; border-radius: 12px;
+  color: #fff;
+  font-weight: 650;
+  font-size: 14px;
+  background: var(--voice);
+  box-shadow: 0 10px 24px -12px color-mix(in oklab, var(--rose) 80%, transparent);
+  transition: transform 0.12s, filter 0.2s;
+}
+.primary:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+.primary:active:not(:disabled) { transform: none; }
+.primary:disabled { background: var(--sunk); color: var(--ink-3); box-shadow: none; }
+
+/* ---------- the chat window ---------- */
+.convo { display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; }
+.chat-head { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 11px 14px 10px; border-bottom: 1px solid var(--line); }
+.chat-head .grow { flex: 1; }
+.avatar {
+  display: grid; place-items: center; flex: none;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--voice); color: #fff;
+  font: 700 13px/1 var(--font-display); letter-spacing: 0.02em;
+  box-shadow: 0 6px 14px -6px color-mix(in oklab, var(--rose) 70%, transparent);
+}
+.avatar.is-example { background: var(--laya-bg); color: var(--violet); box-shadow: inset 0 0 0 1px var(--laya-line); }
+.avatar .ico { width: 16px; height: 16px; }
+.person-sel, .stage {
+  appearance: none; -webkit-appearance: none;
+  field-sizing: content; /* as wide as the chosen name, not the longest one in the list */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%238b809e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+.person-sel {
+  min-width: 0; max-width: 240px;
+  border: 0; border-radius: 10px;
+  background-color: transparent; background-position: right 7px center; background-size: 12px;
+  padding: 5px 27px 5px 7px;
+  font: 650 16px/1.3 var(--font-display); color: var(--ink);
+  text-overflow: ellipsis;
+}
+.person-sel:hover { background-color: var(--sunk); }
+.stage {
+  border: 1px solid var(--line); border-radius: 999px;
+  background-color: var(--card); background-position: right 7px center; background-size: 10px;
+  padding: 3px 23px 3px 11px;
+  font-size: 12.5px; color: var(--ink-2);
+}
+.stage:hover { border-color: var(--line-2); color: var(--ink); }
+.person-sel option, .stage option { color: var(--ink); background: var(--card); font: 14px var(--font-ui); }
+
+.thread {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 20px 22px 16px;
+  scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14px, #000 calc(100% - 10px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 14px, #000 calc(100% - 10px), transparent);
+}
+.bubble { position: relative; max-width: min(76%, 560px); padding: 9px 14px 10px; border-radius: 18px; outline: none; }
+.bubble p { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 15px; line-height: 1.6; }
+.bubble.is-partner { align-self: flex-start; background: var(--card); border: 1px solid var(--line); border-top-left-radius: 6px; box-shadow: var(--shadow-sm); }
+.bubble.is-me {
+  align-self: flex-end;
+  background: var(--voice); color: #fff;
+  border-top-right-radius: 6px;
+  box-shadow: 0 8px 18px -12px color-mix(in oklab, var(--rose) 70%, transparent);
+}
+.bubble.is-me ::selection { background: rgb(255 255 255 / 0.35); }
+.bubble.is-partner + .bubble.is-partner, .bubble.is-me + .bubble.is-me { margin-top: -3px; }
+/* Switch who said it, or take it out: a small bar on the bubble's corner, on hover or focus. */
+.bubble-tools {
+  position: absolute; top: -13px;
+  display: flex; gap: 2px; padding: 2px;
+  border-radius: 999px; border: 1px solid var(--line);
+  background: var(--card); box-shadow: var(--shadow);
+  opacity: 0; transform: translateY(3px);
+  transition: opacity 0.15s, transform 0.15s;
+}
+.bubble.is-partner .bubble-tools { right: -10px; }
+.bubble.is-me .bubble-tools { left: -10px; }
+.bubble:hover .bubble-tools, .bubble:focus-within .bubble-tools { opacity: 1; transform: none; }
+@media (hover: none) { .bubble:not(:focus-within) .bubble-tools { pointer-events: none; } }
+.tool { display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-2); }
+.tool .ico { width: 14px; height: 14px; }
+.tool:hover { background: var(--sunk); color: var(--ink); }
+.tool.del:hover { color: var(--danger); }
+
+/* ---------- Laya's read: hangs off the partner's message on a thin thread ---------- */
+.lcard {
+  position: relative;
+  align-self: flex-start;
+  max-width: min(76%, 440px);
+  min-width: 220px;
+  margin: -1px 0 6px 24px;
+  padding: 10px 13px 11px;
+  border-radius: 14px;
+  border: 1px solid var(--laya-line);
+  background: var(--laya-bg);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: left;
+  animation: rise 0.26s ease-out;
+}
+.lcard::before {
+  content: "";
+  position: absolute;
+  left: -14px; top: -8px;
+  width: 13px; height: 23px;
+  border: solid var(--laya-line);
+  border-width: 0 0 1.5px 1.5px;
+  border-bottom-left-radius: 10px;
+}
+.lcard.is-settled { animation: none; }
+.lcard.is-latest { border-color: color-mix(in oklab, var(--violet) 42%, var(--line)); box-shadow: 0 12px 28px -16px color-mix(in oklab, var(--violet) 70%, transparent); }
+.lcard.is-error { color: var(--ink-3); }
+.lcard p { margin: 0; }
+/* An older read, folded into one line; click to open it again. */
+.lcard.is-folded {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-width: 0;
+  padding: 3px 9px 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.lcard.is-folded::before { top: -8px; height: 20px; }
+.lcard.is-folded:hover { color: var(--ink); border-color: color-mix(in oklab, var(--violet) 45%, var(--line)); }
+.lcard.is-folded .ico { width: 13px; height: 13px; opacity: 0.7; }
+.lsum { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lcard-head { display: flex; align-items: center; gap: 7px; margin-bottom: 7px !important; }
+.lmark { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--violet); box-shadow: 0 0 0 3px color-mix(in oklab, var(--violet) 20%, transparent); }
+.lmark.is-busy { animation: pulse-violet 1.2s infinite; }
+@keyframes pulse-violet { 50% { box-shadow: 0 0 0 5px color-mix(in oklab, var(--violet) 6%, transparent); } }
+.lname { font: 650 11px/1 var(--font-display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--violet); }
+.lstate { color: var(--ink-3); font-size: 11.5px; }
+.lfold { margin-left: auto; display: grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-3); }
+.lfold .ico { width: 13px; height: 13px; transform: rotate(180deg); }
+.lfold:hover { background: color-mix(in oklab, var(--violet) 12%, transparent); color: var(--violet); }
+.litem + .litem { margin-top: 9px; padding-top: 9px; border-top: 1px solid color-mix(in oklab, var(--violet) 13%, transparent); }
+.lq { color: var(--ink-2); display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.ltop { margin-top: 2px !important; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; color: var(--ink); }
+.ltop b { font-size: 14px; font-weight: 650; }
+.lp { font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.ltop .lp { color: var(--violet); font-weight: 650; }
+.lbar { display: block; height: 3px; margin: 5px 0 4px; border-radius: 3px; background: color-mix(in oklab, var(--violet) 15%, transparent); overflow: hidden; }
+.lbar i { display: block; height: 100%; width: calc(var(--p) * 100%); border-radius: 3px; background: var(--violet); transition: width 0.5s cubic-bezier(.2, .8, .2, 1); }
+.lrest { color: var(--ink-3); font-size: 11.5px; display: flex; flex-wrap: wrap; gap: 0 12px; }
+.unsure { font-size: 11px; font-weight: 600; color: var(--amber); padding: 0 7px; border-radius: 999px; background: color-mix(in oklab, var(--amber-hi) 14%, transparent); }
+/* The danger level: a scale from calm to over, lit up to where this chat is. */
+.litem.is-danger .lq { justify-content: space-between; }
+.lnum { color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lnum b { font-size: 15px; color: var(--ink); }
+.litem.is-danger[data-band="mid"] .lnum b { color: var(--amber); }
+.litem.is-danger[data-band="high"] .lnum b { color: var(--rose); }
+.lgauge { position: relative; display: block; height: 6px; margin: 6px 0 5px; border-radius: 6px; background: linear-gradient(90deg, var(--mint-hi), var(--amber-hi) 55%, var(--rose)); }
+.lgauge::after { content: ""; position: absolute; inset: 0 0 0 calc(var(--p) * 100%); border-radius: 0 6px 6px 0; background: color-mix(in oklab, var(--laya-bg) 74%, transparent); }
+.lgauge i {
+  position: absolute; z-index: 1; top: 50%; left: calc(var(--p) * 100%);
+  width: 12px; height: 12px; border-radius: 50%;
+  translate: -50% -50%;
+  background: var(--card); border: 2px solid var(--ink);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+  transition: left 0.5s cubic-bezier(.2, .8, .2, 1);
+}
+.lscene { color: var(--ink-2); font-size: 12px; }
+.lsuggest { margin-top: 9px !important; padding: 7px 10px; border-radius: 10px; background: color-mix(in oklab, var(--violet) 10%, transparent); color: var(--ink); }
+.lsuggest b { color: var(--violet); font-weight: 650; }
+.lcard.is-pending { display: grid; gap: 6px; }
+.lcard.is-pending:has(.litem) { display: block; }
+.litem.is-waiting .shimmer { margin-top: 6px; width: 45%; }
+
+/* ---------- empty chat: what to do, and examples to try ---------- */
+.thread.is-empty { justify-content: center; }
+.hello { margin: auto; max-width: 680px; padding: 12px 6px; display: grid; justify-items: center; gap: 14px; text-align: center; }
+.hello-mark {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 56%, #fff 0 14%, #ffd58f 28%, var(--ember) 46%, var(--rose) 70%, transparent 72%);
+  box-shadow: 0 0 36px 12px color-mix(in oklab, var(--ember) 30%, transparent);
+  animation: breathe 4.5s ease-in-out infinite;
+}
+@keyframes breathe { 50% { transform: scale(1.07); } } /* transform only: no repaint per frame */
+.hello-title { margin: 0; font: 650 22px/1.3 var(--font-display); letter-spacing: -0.01em; }
+.hello-steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.hello-steps li {
+  counter-increment: step;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 13px 5px 5px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow-sm);
+  color: var(--ink-2); font-size: 13px;
+}
+.hello-steps li::before {
+  content: counter(step);
+  display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  background: color-mix(in oklab, var(--rose) 12%, var(--card)); color: var(--rose);
+  font: 650 12px/1 var(--font-display);
+}
+.examples { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin-top: 6px; }
+.examples > span { color: var(--ink-3); font-size: 12px; margin-right: 2px; }
+.chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 4px 12px; font-size: 12.5px; color: var(--ink-2); transition: border-color 0.15s, color 0.15s, background 0.15s; }
+.chip:hover { border-color: color-mix(in oklab, var(--violet) 50%, var(--line)); color: var(--violet); background: var(--laya-bg); }
+.start-hint { max-width: 520px; margin: 18vh auto 0; padding: 0 20px; display: grid; gap: 8px; }
+.start-hint .empty-title { margin: 0; font: 650 20px/1.3 var(--font-display); }
+.start-hint p { margin: 0; }
+.start-hint code { font-family: var(--font-mono); background: var(--sunk); border-radius: 6px; padding: 1px 6px; }
+/* the one in index.html: only if the script has not replaced it after 1.5 s (no flash on a normal load) */
+.start-hint.is-static { animation: show-late 0s 1.5s both; }
+@keyframes show-late { from { visibility: hidden; } to { visibility: visible; } }
+
+/* ---------- the two boxes: what they said on the left, what I said on the right ---------- */
+.composers {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--line);
+  background: color-mix(in oklab, var(--card) 45%, transparent);
+}
+/* stacked when the chat column itself is narrow (phones, and narrow two-column windows) */
+@container (max-width: 560px) { .composers { grid-template-columns: 1fr; } }
+.composer {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: end;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid var(--line); border-radius: 16px; background: var(--card);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.composer.is-partner { border-top-left-radius: 6px; }
+.composer.is-me { border-top-right-radius: 6px; }
+.composer:focus-within { border-color: color-mix(in oklab, var(--violet) 45%, var(--line)); box-shadow: 0 0 0 4px color-mix(in oklab, var(--violet) 12%, transparent); }
+.composer.is-me:focus-within { border-color: color-mix(in oklab, var(--rose) 45%, var(--line)); box-shadow: 0 0 0 4px color-mix(in oklab, var(--rose) 12%, transparent); }
+.composer.is-flash { animation: flash 0.8s ease-out; }
+@keyframes flash { from { box-shadow: 0 0 0 6px color-mix(in oklab, var(--rose) 40%, transparent); } }
+.composer-top { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.speaker { border-radius: 7px; padding: 1px 8px; font-size: 12px; font-weight: 650; white-space: nowrap; }
+.speaker.is-partner { background: var(--sunk); color: var(--ink-2); }
+.speaker.is-me { background: color-mix(in oklab, var(--rose) 13%, transparent); color: var(--rose); }
+.paste-hint { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; color: var(--ink-3); font-size: 11.5px; white-space: nowrap; }
+.composer textarea {
+  grid-column: 1; resize: none; border: 0; outline: 0; background: transparent;
+  padding: 2px 0; min-height: 46px; max-height: 140px;
+  font-size: 14.5px; line-height: 1.55;
+}
+.composer textarea::placeholder { color: var(--ink-3); }
+/* The button lights up once there is something in its box. */
+.composer .add {
+  grid-column: 2;
+  border: 1px solid var(--line); border-radius: 11px;
+  background: var(--sunk); color: var(--ink-2);
+  padding: 7px 13px; font-size: 13px; font-weight: 650; white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.2s, transform 0.12s;
+}
+.composer .add:hover { color: var(--ink); border-color: var(--line-2); }
+.composer .add:active { transform: translateY(1px); }
+.composer.is-partner.has-text .add { background: var(--violet); color: var(--on-violet); border-color: transparent; box-shadow: 0 8px 18px -8px color-mix(in oklab, var(--violet) 85%, transparent); }
+.composer.is-me.has-text .add { background: var(--voice); color: #fff; border-color: transparent; box-shadow: 0 8px 18px -8px color-mix(in oklab, var(--rose) 85%, transparent); }
+.composer.has-text .add:hover { filter: brightness(1.07); }
+
+/* ---------- replies ---------- */
+.replies {
+  align-self: start;
+  max-height: 100%;
+  overflow-y: auto;
+  display: grid; gap: 12px; align-content: start;
+  padding: 15px 16px 14px;
+  scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
+}
+.replies-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px; }
+.replies-head h2 { margin: 0; display: flex; align-items: center; gap: 8px; font: 650 15px/1.3 var(--font-display); }
+.replies-head h2 .ico { width: 16px; height: 16px; color: var(--rose); fill: color-mix(in oklab, var(--rose) 20%, transparent); }
+.replies-empty { display: grid; gap: 10px; }
+.replies-empty p { margin: 0; color: var(--ink-3); font-size: 13px; }
+.ghost-reply { height: 66px; border-radius: 16px; border: 1.5px dashed var(--line-2); opacity: 0.7; }
+.ghost-reply.is-short { width: 80%; height: 50px; }
+.run-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; color: var(--ink-2); font-size: 12.5px; }
+.pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber-hi); animation: pulse 1.2s infinite; box-shadow: 0 0 0 0 color-mix(in oklab, var(--amber-hi) 60%, transparent); flex: none; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.reply-list { display: grid; gap: 10px; }
+.reply {
+  position: relative;
+  padding: 13px 15px 11px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  animation: rise 0.28s ease-out;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.reply.is-best {
+  border: 1.5px solid transparent;
+  background: linear-gradient(var(--card), var(--card)) padding-box, var(--voice) border-box;
+  box-shadow: 0 16px 34px -18px color-mix(in oklab, var(--rose) 70%, transparent);
+}
+.reply.is-template { border-color: color-mix(in oklab, var(--mint) 55%, transparent); }
+.reply.is-live { border-style: dashed; animation: none; }
+.reply.is-settled { animation: none; }
+.reply.is-placeholder { display: grid; gap: 8px; animation: none; }
+.reply.is-placeholder p { margin: 0; font-size: 12.5px; }
+.reply-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin: 0 0 5px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em;
+  background: var(--voice); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.reply-badge .ico { width: 13px; height: 13px; stroke: var(--rose); fill: color-mix(in oklab, var(--rose) 22%, transparent); }
+.reply-badge.is-safe { background: none; color: var(--mint); }
+.reply-badge.is-safe .ico { stroke: var(--mint); fill: none; }
+.reply-text { margin: 0; font-size: 16px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+.caret { display: inline-block; width: 7px; height: 1em; margin-left: 2px; vertical-align: -2px; border-radius: 2px; background: var(--rose); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.reply-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 10px; }
+.flag { font-size: 12px; color: var(--amber); padding: 1px 9px; border-radius: 999px; background: color-mix(in oklab, var(--amber-hi) 12%, transparent); }
+.flag::before { content: "⚠ "; }
+.use {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid var(--line); background: var(--sunk); color: var(--ink);
+  border-radius: 999px; padding: 4px 14px 4px 11px; font-size: 12.5px; font-weight: 650;
+  transition: border-color 0.15s, color 0.15s, filter 0.15s;
+}
+.use .ico { width: 14px; height: 14px; }
+.use:hover { border-color: var(--rose); color: var(--rose); }
+.reply.is-best .use { background: var(--voice); color: #fff; border-color: transparent; box-shadow: 0 8px 18px -10px color-mix(in oklab, var(--rose) 85%, transparent); }
+.reply.is-best .use:hover { color: #fff; filter: brightness(1.07); }
+.reply .use.is-done, .reply .use.is-done:hover { background: color-mix(in oklab, var(--mint) 12%, var(--card)); color: var(--mint); border-color: color-mix(in oklab, var(--mint) 45%, transparent); box-shadow: none; filter: none; }
+.shimmer { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--sunk), var(--line), var(--sunk)); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+.shimmer.is-short { width: 60%; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+/* the one line of small print at the bottom of the replies: not tuned yet, and how long it took */
+.replies-foot {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px;
+  padding-top: 10px; border-top: 1px solid var(--line);
+  color: var(--ink-3); font-size: 11.5px;
+}
+.times { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 0; font-variant-numeric: tabular-nums; }
+.time b { color: var(--ink-2); font-weight: 600; }
+
+/* ---------- notices ---------- */
+.notice { display: flex; gap: 9px; align-items: flex-start; margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 13px; }
+.notice p { margin: 0; }
+.notice .ghost { margin-top: 8px; }
+.notice.is-soft { color: var(--ink-2); background: var(--sunk); }
+.notice.is-calm { color: var(--ink); background: color-mix(in oklab, var(--violet) 11%, var(--card)); }
+.notice.is-warn { background: color-mix(in oklab, var(--amber-hi) 12%, var(--card)); }
+.notice.is-safety { background: color-mix(in oklab, var(--danger) 10%, var(--card)); border: 1px solid color-mix(in oklab, var(--danger) 40%, transparent); }
+.notice.is-safety .ico { color: var(--danger); }
+
+/* ---------- memory: what this reply used, and what was kept from the chat ---------- */
+.memory-used, .memory-saved { display: grid; gap: 6px; padding: 10px 12px; border-radius: 14px; }
+.memory-used { background: var(--sunk); }
+.memory-saved { border: 1px solid color-mix(in oklab, var(--rose) 26%, var(--line)); background: color-mix(in oklab, var(--rose) 5%, var(--card)); }
+.memory-title { margin: 0; font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
+.memory-item { margin: 0; font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; overflow-wrap: anywhere; }
+.memory-where { color: var(--ink-3); }
+.memory-saved .memory-where { color: var(--rose); font-weight: 600; }
+.memory-saved .link, .auto-item .link { font-size: 12px; }
+.memory-note { margin: 0; }
+.layer { display: inline-block; font-size: 11px; line-height: 1.6; border: 1px solid var(--line); border-radius: 999px; padding: 0 7px; color: var(--ink-2); white-space: nowrap; }
+.layer.is-l0 { color: var(--violet); border-color: color-mix(in oklab, var(--violet) 45%, transparent); }
+.layer.is-l1 { color: var(--amber); border-color: color-mix(in oklab, var(--amber-hi) 45%, transparent); }
+.layer.is-l2 { color: var(--mint); border-color: color-mix(in oklab, var(--mint) 45%, transparent); }
+.layer.is-l3 { color: var(--ink-3); }
+.layer.is-auto { color: var(--rose); border-color: color-mix(in oklab, var(--rose) 45%, transparent); }
+
+/* ---------- sheets: settings and profile drawers, consent ---------- */
+.sheet {
+  position: fixed; z-index: 10;
+  inset: 10px 10px 10px auto;
+  width: min(520px, calc(100vw - 20px));
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+  animation: slide 0.24s cubic-bezier(.2, .8, .2, 1);
+  scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
+}
+.app.has-sheet::after { content: ""; position: fixed; inset: 0; z-index: 9; background: rgb(18 10 28 / 0.34); animation: fade 0.2s ease-out; }
+@keyframes slide { from { transform: translateX(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade { from { opacity: 0; } }
+.sheet-inner { padding: 0 18px 28px; }
+.sheet-head {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 -18px 10px; padding: 12px 18px 10px;
+  background: color-mix(in oklab, var(--bg) 90%, transparent);
+  backdrop-filter: blur(10px);
+}
+.sheet-head h2 { margin: 0; font: 650 18px/1.3 var(--font-display); overflow-wrap: anywhere; }
+.saved-flash { margin-left: auto; font-size: 12px; color: var(--mint); opacity: 0; transition: opacity 0.2s; }
+.saved-flash.is-on { opacity: 1; }
+.group { display: grid; gap: 9px; margin-bottom: 10px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--card); }
+.group h3 { margin: 0; font: 650 14px/1.35 var(--font-display); }
+.sub { display: grid; gap: 8px; padding: 2px 0 6px 22px; border-left: 2px solid var(--line); margin-left: 7px; }
+.field { display: grid; gap: 4px; }
+.field-label { font-size: 12px; color: var(--ink-3); }
+.field input[type="text"], .group textarea, .field select {
+  width: 100%;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--bg);
+  padding: 7px 10px; font-size: 13px;
+}
+.field input[type="text"]:focus, .group textarea:focus { outline: none; border-color: color-mix(in oklab, var(--violet) 50%, var(--line)); box-shadow: 0 0 0 3px color-mix(in oklab, var(--violet) 12%, transparent); }
+.group textarea { resize: vertical; }
+.group textarea.book { min-height: 300px; font-size: 13.5px; line-height: 1.7; }
+.inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.eng-line { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 13px; }
+.eng-line .eng { font-weight: 600; }
+.radio, .toggle, .check { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.radio input, .check input { accent-color: var(--rose); width: 16px; height: 16px; flex: none; }
+.toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle-ui { width: 32px; height: 19px; border-radius: 999px; background: var(--line-2); position: relative; flex: none; transition: background 0.2s; }
+.toggle-ui::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / 0.2); transition: transform 0.2s; }
+.toggle input:checked + .toggle-ui { background: var(--rose); }
+.toggle input:checked + .toggle-ui::after { transform: translateX(13px); }
+.toggle input:focus-visible + .toggle-ui { outline: 2px solid var(--violet); outline-offset: 2px; }
+.about p { margin: 0; font-size: 13px; color: var(--ink-2); }
+.memory .layer-block { border-top: 1px solid var(--line); padding-top: 8px; }
+.memory summary { cursor: pointer; font-size: 12.5px; color: var(--ink-2); }
+.chunks { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
+.chunk { white-space: pre-wrap; overflow-wrap: anywhere; }
+.chunk b { color: var(--ink); font-weight: 600; }
+pre.core { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 0; font: inherit; font-size: 12.5px; color: var(--ink-2); }
+.trash-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.trash-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.trash-list li .ghost { margin-left: auto; }
+
+/* First run: the page waits behind a frosted pane, the sky still glowing through. */
+.app.has-sheet:has(.consent)::after { background: transparent; backdrop-filter: none; }
+.sheet:has(.consent) {
+  inset: 0; width: auto;
+  display: grid; place-items: center;
+  border: 0; border-radius: 0; box-shadow: none;
+  background: color-mix(in oklab, var(--bg) 45%, transparent);
+  backdrop-filter: blur(26px) saturate(1.2);
+  animation: fade 0.3s ease-out;
+}
+.sheet-inner.consent {
+  width: min(480px, calc(100vw - 32px));
+  margin: 5vh auto;
+  padding: 30px 28px 22px;
+  display: grid; gap: 16px;
+  border: 1px solid var(--line); border-radius: 26px;
+  background: var(--card);
+  box-shadow: var(--shadow-lg), 0 0 120px -30px color-mix(in oklab, var(--rose) 55%, transparent);
+}
+.consent h2 { margin: 0; font: 650 24px/1.25 var(--font-display); letter-spacing: -0.01em; }
+.consent .primary { width: 100%; padding: 12px 16px; font-size: 15px; }
+.consent-mark {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 56%, #fff 0 15%, #ffd58f 30%, var(--ember) 46%, var(--rose) 70%, transparent 72%);
+  box-shadow: 0 0 26px 9px color-mix(in oklab, var(--rose) 30%, transparent);
+  animation: flicker 1.6s infinite;
+}
+.consent-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.consent-list li { display: grid; gap: 2px; padding-left: 13px; border-left: 2px solid color-mix(in oklab, var(--rose) 45%, var(--line)); color: var(--ink-2); font-size: 13.5px; }
+.consent-list li b { color: var(--ink); font-size: 14.5px; font-weight: 650; }
+.lang-switch { justify-content: center; font-size: 12.5px; }
+
+/* ---------- toast ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: 28px; z-index: 20;
+  transform: translate(-50%, 12px); opacity: 0; pointer-events: none;
+  display: flex; align-items: center; gap: 12px;
+  max-width: calc(100% - 32px);
+  padding: 9px 18px; border-radius: 999px;
+  background: var(--ink); color: var(--bg); font-size: 13px;
+  box-shadow: var(--shadow-lg);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.toast.is-on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast-action { border: 0; background: none; color: var(--rose); font-weight: 650; padding: 0; }
+
+/* ---------- narrow windows: one column, the page scrolls, replies under the chat ---------- */
+@media (max-width: 880px) {
+  .app { height: auto; min-height: 100vh; min-height: 100dvh; grid-template-rows: auto auto auto; }
+  .hdr { padding: 12px 16px 10px; }
+  .banners { padding: 0 12px 10px; }
+  .main { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 0 12px 16px; }
+  .thread { flex: none; max-height: 62vh; min-height: 200px; }
+  .replies { align-self: stretch; max-height: none; overflow: visible; }
+  .bubble, .lcard { max-width: 86%; }
+  .privacy-text { display: none; }
+}
+@media (max-width: 520px) {
+  .chat-head { flex-wrap: wrap; }
+  .person-sel { max-width: 170px; }
+  .paste-hint { display: none; }
+  .hello-title { font-size: 19px; }
+  .sheet { inset: 0; width: 100vw; border-radius: 0; border: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
