@@ -4,10 +4,9 @@
 // labelled against it, and the benchmark scores every judge (Laya zero-shot, Laya-Heart,
 // Jev) on it. Change it only together with the labelling guide.
 //
-// Writing rules adapted from jev-chat-jarvis cn/tools/jev/questions.py (MIT, see CREDITS.md):
-// instructions and criteria in English, chat text stays in its original language, score
-// levels describe concrete scenes rather than abstract degrees, and questions must not
-// contradict each other. The questions themselves are our own (couple chat, 8 questions).
+// Writing rules: instructions and criteria in English, chat text stays in its original
+// language, score levels describe concrete scenes rather than abstract degrees, and
+// questions must not contradict each other.
 //
 // Laya budget: every question's instructions + options must fit head_max_len (256 tokens for
 // laya-multilingual), each option is cut at 48 tokens. So options stay short; long criteria
@@ -194,8 +193,8 @@ export const LABELS = {
   },
 };
 
-/** Relationship stages: the idea of stage-aware judging is borrowed from jev-chat-jarvis
- * global/RomanceScene (MIT); the wording below is ours. */
+/** Relationship stages: the chosen stage's description goes into the chat state as
+ * `relationship`, so every question is read against it. */
 export const STAGES = {
   just_met: {
     zh: "刚认识", en: "Just met",

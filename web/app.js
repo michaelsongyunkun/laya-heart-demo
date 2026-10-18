@@ -1338,7 +1338,6 @@ function settingsSheet() {
     h("section", { class: "group about" },
       h("h3", null, t("sAbout")),
       h("p", null, `Laya-Heart ${S.version}`),
-      h("p", null, t("sAboutBased"), " ", h("a", { href: "https://github.com/jev-chat/jev-chat-jarvis", target: "_blank", rel: "noopener noreferrer" }, "github.com/jev-chat/jev-chat-jarvis")),
       h("p", null, t("sAboutModels")),
       h("p", null, t("sAboutLicense")),
       h("p", { class: "fine" }, t("sAboutDisclaim"))),

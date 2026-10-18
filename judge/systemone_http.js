@@ -2,7 +2,7 @@
 // checkpoint before it is exported to ONNX), or Jev (TypeSafe direct / OpenRouter) as the
 // closed-source comparison. Remote URLs send the chat off this machine; the panel says so.
 //
-// URL rule borrowed from jev-chat-jarvis-mac src/generate.py jev_request_url (MIT):
+// URL rule:
 // host only -> {base}/v1/systemone; ends with a version segment -> {base}/systemone;
 // already ends with an action (/v1/systemone, /v1/evaluate, /api/alpha/decisions) -> as is.
 

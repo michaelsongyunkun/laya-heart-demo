@@ -1,6 +1,5 @@
 // Splits a model reply into candidate lines. Small models label, number and quote their
-// lines even when told not to (the same lesson as jev-chat-jarvis-mac generate.py), so we
-// strip that before the lines are shown or checked.
+// lines even when told not to, so we strip that before the lines are shown or checked.
 
 const NUMBERING = /^\s*(?:[-*•·]|\(?\d{1,2}[.)、:：]|[①②③④⑤]|第[一二三四五1-5]条[:：]?)\s*/;
 const LABEL = /^\s*(?:\*\*)?(?:回复|候选|草稿|选项|稳妥|温暖|简短|版本|reply|option|candidate)\s*[A-Ca-c1-5一二三]?\s*(?:\*\*)?\s*[:：]\s*/i;

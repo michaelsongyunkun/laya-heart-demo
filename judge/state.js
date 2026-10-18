@@ -1,6 +1,6 @@
 // ChatState: the one input every judge (Laya local, laya-serve, Jev) and the drafter share.
-// Shape follows the jev-chat-jarvis convention (state is a JSON object, at most the last 10
-// messages, chat text kept in its original language); speakers are "partner" / "me".
+// A JSON object with at most the last 10 messages, chat text kept in its original language;
+// speakers are "partner" / "me".
 import { STAGES } from "./questions.js";
 
 export const MAX_MESSAGES = 10;

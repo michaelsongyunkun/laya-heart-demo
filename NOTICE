@@ -2,12 +2,8 @@ Laya-Heart
 Copyright (c) 2026 Michael Song and the Laya-Heart contributors
 Licensed under the MIT License (see LICENSE).
 
-基于 Jev 聊天助手（https://github.com/jev-chat/jev-chat-jarvis）二次开发。
-Built on Jev Chat Assistant (https://github.com/jev-chat/jev-chat-jarvis and
-https://github.com/jev-chat/jev-chat-jarvis-mac), MIT. Laya-Heart is an independent
-project; it is not made, endorsed or supported by the Jev Chat Assistant authors, by
-TypeSafe, by Convai Innovations or by Google. Their LICENSE and NOTICE files are kept in
-third_party/.
+Laya-Heart is an independent project; it is not made, endorsed or supported by TypeSafe,
+by Convai Innovations or by Google.
 
 This product includes:
 - laya-ts runtime and export script from Laya (https://github.com/NandhaKishorM/laya),

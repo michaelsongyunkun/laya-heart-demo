@@ -1,8 +1,7 @@
 // Runtime checks on each draft — plain code rules, no model call.
-// The checklist idea (new promises, promising for others, made-up facts) is borrowed from
-// jev-chat-jarvis global/engine/CandidateCheck.kt (MIT); there Jev answers each check, here
-// they are cheap rules so the panel stays fast. Model-graded checks belong to the offline
-// benchmark, not to the runtime path.
+// The checklist (new promises, promising for others, made-up facts) runs as cheap rules so
+// the panel stays fast. Model-graded checks belong to the offline benchmark, not to the
+// runtime path.
 
 export const LIMITS = { maxChars: 60 };
 
