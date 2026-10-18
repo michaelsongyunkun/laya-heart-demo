@@ -1,5 +1,5 @@
 # Render Blueprint: the Laya-Heart online demo as a static site (no build step; the files are the build).
-# Built from https://github.com/r5x8ksva-del/laya-heart with `npm run build:demo` (media left out).
+# Built from https://github.com/sykyyds3739/laya-heart with `npm run build:demo` (media left out).
 services:
   - type: web
     name: laya-heart-demo

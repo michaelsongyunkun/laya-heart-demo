@@ -39,7 +39,7 @@ models on the user's machine with a prompt laid out for llama.cpp's cache, the p
   [YunkunSong/laya-heart-laya-onnx](https://huggingface.co/YunkunSong/laya-heart-laya-onnx)
   (folder `v3/`, with both licenses and a NOTICE). The unchanged zero-shot conversion is in the
   same repo (`zero-shot/`) and in this repo's release
-  [`laya-onnx-v1`](https://github.com/r5x8ksva-del/laya-heart/releases/tag/laya-onnx-v1); see
+  [`laya-onnx-v1`](https://github.com/sykyyds3739/laya-heart/releases/tag/laya-onnx-v1); see
   [`models/README.md`](models/README.md).
 - **Gemma 4 E2B** by Google — Apache-2.0. The first start downloads this project's fine-tune of it
   (v4, a Q4_K_M GGUF) from [YunkunSong/laya-heart-gemma-e2b-v4-GGUF](https://huggingface.co/YunkunSong/laya-heart-gemma-e2b-v4-GGUF)
